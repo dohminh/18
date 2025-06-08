@@ -1,0 +1,792 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- New Heading and Introduction -->
+    <div class="text-center mb-4">
+        <h1 class="display-4 font-weight-bold">Emergency Fund Calculator</h1>
+        <p class="lead">Estimate how much money you need to set aside for emergencies, based on your personal situation.</p>
+    </div>
+    <!-- Info Cards Row -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold">What is an Emergency Fund?</h5>
+                    <p class="card-text">An emergency fund is money set aside to cover unexpected expenses.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold">Why You Need One?</h5>
+                    <p class="card-text">An emergency fund provides a financial safety net to avoid debt when emergencies happen.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold">How Much Should You Save?</h5>
+                    <p class="card-text">The general rule is to save 3-6 months of expenses.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculator Type Selection Section -->
+    <div class="text-center mb-4">
+        <h4 class="font-weight-bold mb-1">Choose Your Calculator Type</h4>
+    </div>
+    <div class="row justify-content-center mb-4" id="calculatorTypeCards">
+        <div class="col-md-5 mb-3">
+            <div class="card card-type-select h-100 shadow-sm" id="cardSimple" style="cursor:pointer; border: 2px solid #e0e7ef; transition: border 0.2s;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <h5 class="ml-2 font-weight-bold mb-0">Type A: Simple Emergency Fund</h5>
+                    </div>
+                    <p class="text-left">A simple, straightforward calculator based on a set number of months.</p>
+                    <ul class="text-left pl-3">
+                        <li><span style="color: #000;">Quick calculation</span></li>
+                        <li>Based on monthly expenses</li>
+                        <li>Standard 3-6 months rule</li>
+                        <li>Perfect for beginners</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 mb-3">
+            <div class="card card-type-select h-100 shadow-sm" id="cardCustomized" style="cursor:pointer; border: 2px solid #e0e7ef; transition: border 0.2s;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <h5 class="ml-2 font-weight-bold mb-0">Type B: Customized Emergency Fund</h5>
+                    </div>
+                    <p class="text-left">A more flexible, detailed calculator where you can adjust your emergency fund calculation based on categories and frequency of emergencies.</p>
+                    <ul class="text-left pl-3">
+                        <li>Detailed scenario planning</li>
+                        <li>Customizable emergency types</li>
+                        <li>Frequency-based calculations</li>
+                        <li>Personalized coverage amounts</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Calculator -->
+    <div id="simpleCalculator" style="display: none;">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title font-weight-bold">Simple Emergency Fund Calculator</h5>
+                <form id="simpleCalculatorForm" autocomplete="off">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Step 1: How many months' essential expenses do you want to cover?</label>
+                                <input type="number" class="form-control" id="months" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Step 2: Select your essential expenses</label>
+                                <button type="button" class="btn btn-outline-primary btn-sm mb-2"
+                                    data-toggle="modal" data-target="#expenseCategoriesModal">
+                                    Select Expense Categories
+                                </button>
+                                <div id="selectedCategories" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <!-- No calculate button, auto-calculate instead -->
+                        </div>
+                    </div>
+                </form>
+                <div id="simpleResult" class="mt-4">
+                    <h5 class="font-weight-bold">Your Simple Emergency Fund Target</h5>
+                    <div class="d-flex justify-content-center align-items-center"
+                        style="gap: 10px; flex-wrap: wrap;">
+                        <input type="text" id="displayMonths" class="form-control text-center font-weight-bold"
+                            style="width: 90px; display: inline-block;" readonly>
+                        <span class="mx-2">×</span>
+                        <input type="text" id="displayMonthlyExpense"
+                            class="form-control text-center font-weight-bold"
+                            style="width: 160px; display: inline-block;" readonly>
+                        <span class="mx-2">=</span>
+                        <input type="text" id="displayTotalAmount"
+                            class="form-control text-center font-weight-bold"
+                            style="width: 180px; display: inline-block; background: #e9f7ef; border: 2px solid #28a745; color: #155724;"
+                            readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customized Calculator -->
+    <div id="customizedCalculator" style="display: none;">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title font-weight-bold">Customized Emergency Fund Calculator</h5>
+                <form id="customizedCalculatorForm">
+                    <div id="emergencyTypeBlocks">
+                        <div class="emergency-type-block mb-3">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Select Emergency Type</label>
+                                        <select class="form-control emergencyTypeSelect" required>
+                                            <option value="">Select Emergency Type</option>
+                                            <option value="job">Job Related</option>
+                                            <option value="medical">Medical Bills</option>
+                                            <option value="essential">Essential Expenses</option>
+                                            <option value="asset">Personal Asset</option>
+                                            <option value="dependents">Dependents</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="emergencyScenariosTable"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <button type="button" class="btn btn-outline-secondary mb-2"
+                                id="addEmergencyType">Add Another Emergency Type</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+                            <button type="submit" class="btn btn-primary mt-2">Calculate</button>
+                        </div>
+                    </div>
+                </form>
+                <div id="customizedResult" class="mt-4" style="display: none;">
+                    <h5 class="font-weight-bold">Your Customized Emergency Fund Target</h5>
+                    <p>Total Amount: <span id="customTotalAmount"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Finalize Goal Section -->
+    <div id="finalizeGoal" class="card shadow-sm mb-4" style="background: #f8fcfd; border-radius: 24px;">
+        <div class="card-body" style="padding: 2rem 2.5rem;">
+            <h3 class="font-weight-bold mb-4">Finalize Your Goal</h3>
+            <form id="finalizeForm">
+                <div class="row align-items-end">
+                    <div class="col-md-3 mb-3">
+                        <label for="targetAmount" class="font-weight-bold mb-2">Target Emergency Amount</label>
+                        <input type="text" class="form-control" id="targetAmount" readonly>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="currentSavings" class="font-weight-bold mb-2">Current Emergency Savings</label>
+                        <input type="text" class="form-control" id="currentSavings" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="monthlyCapacity" class="font-weight-bold mb-2">How much can you dedicate to Emergency Saving each month?</label>
+                        <input type="text" class="form-control" id="monthlyCapacity" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="monthsToTarget" class="font-weight-bold mb-2">Months to Reach Target</label>
+                        <input type="text" class="form-control" id="monthsToTarget" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 text-center mt-3">
+                        <button type="submit" class="btn btn-success btn-lg px-5" style="font-size: 1.25rem;">Confirm Goal</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+   
+
+<!-- Expense Categories Modal -->
+<div class="modal fade" id="expenseCategoriesModal" tabindex="-1" role="dialog"
+    aria-labelledby="expenseCategoriesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="expenseCategoriesModalLabel">Select Expense Categories</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input expense-category-checkbox" type="checkbox"
+                                value="Essential Spending" id="essential_spending" checked>
+                            <label class="form-check-label" for="essential_spending">Essential Spending</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input expense-category-checkbox" type="checkbox"
+                                value="Shopping & Entertainment" id="shopping_entertainment" checked>
+                            <label class="form-check-label" for="shopping_entertainment">Shopping &
+                                Entertainment</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input expense-category-checkbox" type="checkbox" value="Education"
+                                id="education" checked>
+                            <label class="form-check-label" for="education">Education</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input expense-category-checkbox" type="checkbox" value="Health"
+                                id="health" checked>
+                            <label class="form-check-label" for="health">Health</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input expense-category-checkbox" type="checkbox" value="Insurance"
+                                id="insurance" checked>
+                            <label class="form-check-label" for="insurance">Insurance</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input expense-category-checkbox" type="checkbox" value="Investment"
+                                id="investment" checked>
+                            <label class="form-check-label" for="investment">Investment</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveCategories">Save Selection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Card selection logic
+        const cardSimple = document.getElementById('cardSimple');
+        const cardCustomized = document.getElementById('cardCustomized');
+        const simpleCalculator = document.getElementById('simpleCalculator');
+        const customizedCalculator = document.getElementById('customizedCalculator');
+
+        // --- Clear Finalize Goal fields function ---
+        function clearFinalizeGoalFields() {
+            document.getElementById('targetAmount').value = '';
+            document.getElementById('currentSavings').value = '';
+            document.getElementById('monthlyCapacity').value = '';
+            document.getElementById('monthsToTarget').value = '';
+            document.getElementById('finalizeGoal').style.display = 'none';
+        }
+
+        function selectCalculator(type) {
+            if (type === 'simple') {
+                cardSimple.style.border = '2px solid #2563eb';
+                cardCustomized.style.border = '2px solid #e0e7ef';
+                simpleCalculator.style.display = 'block';
+                customizedCalculator.style.display = 'none';
+            } else if (type === 'customized') {
+                cardSimple.style.border = '2px solid #e0e7ef';
+                cardCustomized.style.border = '2px solid #64748b';
+                simpleCalculator.style.display = 'none';
+                customizedCalculator.style.display = 'block';
+            }
+        }
+        cardSimple.onclick = function() { selectCalculator('simple'); };
+        cardCustomized.onclick = function() { selectCalculator('customized'); };
+        // Optionally, select one by default
+        // selectCalculator('simple');
+        // Remove the dropdown for calculator type
+        const calculatorTypeDropdown = document.getElementById('calculatorType');
+        if (calculatorTypeDropdown) {
+            calculatorTypeDropdown.closest('.card').style.display = 'none';
+        }
+
+        // Pass data from Flask to JavaScript
+        const categorizedMonthlyExpenses = JSON.parse('{{ categorized_monthly_expenses | tojson | safe }}');
+
+        console.log('Categorized Monthly Expenses:', categorizedMonthlyExpenses); // Added for debugging
+
+        // Emergency Type scenarios
+        const emergencyScenarios = {
+            job: [
+                { name: 'Job Loss', avgExpense: 'Full-time Income' }
+            ],
+            medical: [
+                { name: 'Common Cold & Sore Throat', avgExpense: '500,000' },
+                { name: 'Allergies', avgExpense: '300,000' },
+                { name: 'Stomach Pain', avgExpense: '400,000' },
+                { name: 'Minor Traffic Accident', avgExpense: '1,000,000' },
+                { name: 'Minor Sports Injury', avgExpense: '800,000' },
+                { name: 'Back Pain', avgExpense: '600,000' }
+            ],
+            essential: [
+                { name: 'Rent Increase', avgExpense: '500,000' },
+                { name: 'Electricity Bill Increase', avgExpense: '200,000' },
+                { name: 'Water Bill Increase', avgExpense: '100,000' },
+                { name: 'Fuel Price Increase', avgExpense: '300,000' },
+                { name: 'Groceries', avgExpense: '400,000' }
+            ],
+            asset: [
+                { name: 'Bicycle Repair', avgExpense: '200,000' },
+                { name: 'Motorcycle Repair', avgExpense: '1,000,000' },
+                { name: 'Car Repair', avgExpense: '5,000,000' },
+                { name: 'New Bicycle', avgExpense: '2,000,000' },
+                { name: 'New Motorcycle', avgExpense: '20,000,000' },
+                { name: 'New Car', avgExpense: '500,000,000' },
+                { name: 'Smartphone', avgExpense: '5,000,000' },
+                { name: 'Laptop', avgExpense: '15,000,000' }
+            ],
+            dependents: [
+                { name: 'Pet Medical Bills', avgExpense: '1,000,000' }
+            ]
+        };
+
+        // --- Multiple Emergency Type Blocks for Type B ---
+        function renderScenariosTable(type, tableDiv) {
+            if (!type) {
+                tableDiv.innerHTML = '';
+                return;
+            }
+            let html = '<table class="table">';
+            html += '<thead><tr><th>Scenario</th><th>Average Expense</th><th>Expense Covered by You</th><th>Frequency</th></tr></thead>';
+            html += '<tbody>';
+            emergencyScenarios[type].forEach(scenario => {
+                html += `
+                <tr>
+                    <td>${scenario.name}</td>
+                    <td>₫${scenario.avgExpense}</td>
+                    <td><input type="text" class="form-control expense-covered" placeholder="Enter amount"></td>
+                    <td><input type="number" class="form-control frequency" value="0" min="0"></td>
+                </tr>
+            `;
+            });
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+        }
+
+        // Initial render for the first block
+        const firstTypeSelect = document.querySelector('.emergencyTypeSelect');
+        const firstScenariosDiv = document.querySelector('.emergencyScenariosTable');
+        firstTypeSelect.addEventListener('change', function () {
+            renderScenariosTable(this.value, firstScenariosDiv);
+        });
+
+        // Add more emergency type blocks
+        document.getElementById('addEmergencyType').addEventListener('click', function () {
+            // Collapse all previous blocks
+            document.querySelectorAll('.emergency-type-block').forEach(block => {
+                collapseEmergencyBlock(block);
+            });
+            // Add new block
+            const block = document.createElement('div');
+            block.className = 'emergency-type-block mb-3';
+            block.innerHTML = `
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group d-flex justify-content-between align-items-center">
+                        <label>Select Emergency Type</label>
+                        <button type="button" class="btn btn-sm btn-outline-danger clear-block">Clear</button>
+                    </div>
+                    <select class="form-control emergencyTypeSelect" required>
+                        <option value="">Select Emergency Type</option>
+                        <option value="job">Job Related</option>
+                        <option value="medical">Medical Bills</option>
+                        <option value="essential">Essential Expenses</option>
+                        <option value="asset">Personal Asset</option>
+                        <option value="dependents">Dependents</option>
+                    </select>
+                </div>
+            </div>
+            <div class="emergencyScenariosTable"></div>
+        `;
+            document.getElementById('emergencyTypeBlocks').appendChild(block);
+            const typeSelect = block.querySelector('.emergencyTypeSelect');
+            const scenariosDiv = block.querySelector('.emergencyScenariosTable');
+            typeSelect.addEventListener('change', function () {
+                renderScenariosTable(this.value, scenariosDiv);
+            });
+            // Clear button handler
+            block.querySelector('.clear-block').onclick = function () {
+                // Clear all input values in this block
+                block.querySelectorAll('input').forEach(input => input.value = '');
+                typeSelect.value = '';
+                scenariosDiv.innerHTML = '';
+            };
+        });
+
+        // Collapse block into summary
+        function collapseEmergencyBlock(block) {
+            const typeSelect = block.querySelector('.emergencyTypeSelect');
+            const scenariosDiv = block.querySelector('.emergencyScenariosTable');
+            const selectedType = typeSelect.value;
+            if (!selectedType) return;
+            // Gather summary info
+            let summary = `<div class='d-flex justify-content-between align-items-center p-2 border rounded bg-light'>`;
+            summary += `<span><strong>${typeSelect.options[typeSelect.selectedIndex].text}</strong></span>`;
+            // List filled scenarios
+            const rows = scenariosDiv.querySelectorAll('tbody tr');
+            let scenarioSummaries = [];
+            rows.forEach(row => {
+                const name = row.children[0].textContent.trim();
+                const expense = row.querySelector('.expense-covered').value;
+                const freq = row.querySelector('.frequency').value;
+                if (expense && freq && parseFloat(freq) > 0 && parseFloat(expense) > 0) {
+                    scenarioSummaries.push(`${name} (${formatCurrency(expense)} × ${freq})`);
+                }
+            });
+            if (scenarioSummaries.length > 0) {
+                summary += `<span class='ml-2 text-muted small'>${scenarioSummaries.join(', ')}</span>`;
+            }
+            summary += `<button type='button' class='btn btn-link btn-sm ml-2 edit-emergency-block'>Edit</button>`;
+            summary += `</div>`;
+            // Hide the form and show summary
+            typeSelect.closest('.row').style.display = 'none';
+            scenariosDiv.style.display = 'none';
+            // Insert summary before the block
+            let summaryDiv = block.querySelector('.emergency-summary');
+            if (!summaryDiv) {
+                summaryDiv = document.createElement('div');
+                summaryDiv.className = 'emergency-summary mb-2';
+                block.insertBefore(summaryDiv, block.firstChild);
+            }
+            summaryDiv.innerHTML = summary;
+            summaryDiv.style.display = 'block';
+            // Edit button handler
+            summaryDiv.querySelector('.edit-emergency-block').onclick = function () {
+                summaryDiv.style.display = 'none';
+                typeSelect.closest('.row').style.display = '';
+                scenariosDiv.style.display = '';
+            };
+        }
+
+        // Update calculation to gather all scenarios from all blocks
+        function calculateCustomizedTotal() {
+            const blocks = document.querySelectorAll('.emergency-type-block');
+            const allScenarios = [];
+            blocks.forEach(block => {
+                const emergencyType = block.querySelector('.emergencyTypeSelect').value;
+                const scenarioRows = block.querySelectorAll('.emergencyScenariosTable tbody tr');
+                scenarioRows.forEach(row => {
+                    const name = row.children[0].textContent.trim();
+                    const expenseCoveredInput = row.querySelector('.expense-covered');
+                    const frequencyInput = row.querySelector('.frequency');
+                    let expenseCovered = parseFloat(expenseCoveredInput.value.replace(/[^0-9.-]+/g, '')) || 0;
+                    let frequency = parseFloat(frequencyInput.value) || 0;
+                    // Only send valid scenarios to backend
+                    if (frequency > 0 && expenseCovered > 0) {
+                        allScenarios.push({
+                            name: name,
+                            expense_covered: expenseCovered,
+                            frequency: frequency
+                        });
+                    }
+                });
+            });
+            if (allScenarios.length === 0) {
+                alert('Please enter expense and frequency for at least one scenario.');
+                return 0;
+            }
+            fetch('/calculate-customized-emergency-fund', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    scenarios: allScenarios
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('customTotalAmount').textContent = formatCurrency(data.customized_emergency_fund);
+                        document.getElementById('customizedResult').style.display = 'block';
+                        document.getElementById('finalizeGoal').style.display = 'block';
+                        document.getElementById('targetAmount').value = formatCurrency(data.customized_emergency_fund);
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Network error occurred while calculating emergency fund.');
+                });
+            return 0;
+        }
+
+        // --- Auto-calculate for Simple Emergency Fund ---
+        function updateSimpleEmergencyFund() {
+            clearFinalizeGoalFields(); // Clear fields at the start of a new calculation
+            const months = parseInt(document.getElementById('months').value) || 0;
+            // Get selected categories
+            const selectedCategoryValues = Array.from(document.querySelectorAll('.expense-category-checkbox:checked')).map(cb => cb.value);
+            // Send to backend for calculation
+            fetch('/calculate-simple-emergency-fund', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    months: months,
+                    categories: selectedCategoryValues
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('displayMonths').value = data.months;
+                        document.getElementById('displayMonthlyExpense').value = formatCurrency(data.avg_monthly_expense);
+                        document.getElementById('displayTotalAmount').value = formatCurrency(data.result);
+                        // Show Finalize Your Goal if result > 0
+                        if (data.result > 0) {
+                            document.getElementById('finalizeGoal').style.display = 'block';
+                            document.getElementById('targetAmount').value = formatCurrency(data.result);
+                        } else {
+                            document.getElementById('finalizeGoal').style.display = 'none';
+                        }
+                    } else {
+                        document.getElementById('displayMonths').value = '';
+                        document.getElementById('displayMonthlyExpense').value = '';
+                        document.getElementById('displayTotalAmount').value = '';
+                        document.getElementById('finalizeGoal').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('displayMonths').value = '';
+                    document.getElementById('displayMonthlyExpense').value = '';
+                    document.getElementById('displayTotalAmount').value = '';
+                    document.getElementById('finalizeGoal').style.display = 'none';
+                });
+        }
+        // Trigger calculation on input change
+        document.getElementById('months').addEventListener('input', updateSimpleEmergencyFund);
+        // Instead, trigger calculation after modal is fully closed
+        $('#expenseCategoriesModal').on('hidden.bs.modal', function () {
+            updateSimpleEmergencyFund();
+        });
+        // Initial calculation
+        updateSimpleEmergencyFund();
+
+        // Handle customized calculator form submission
+        document.getElementById('customizedCalculatorForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearFinalizeGoalFields(); // Clear fields at the start of a new calculation
+            calculateCustomizedTotal();
+        });
+
+        // Handle finalize form submission
+        document.getElementById('finalizeForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Get raw values and handle different number formats
+            const targetRaw = document.getElementById('targetAmount').value;
+            const currentRaw = document.getElementById('currentSavings').value;
+            const monthlyRaw = document.getElementById('monthlyCapacity').value;
+
+            // Parse numbers correctly - handle both comma and dot as thousands separators
+            function parseNumber(value) {
+                if (!value) return 0;
+                // Remove all non-digit characters except the last dot (if it's decimal)
+                // If there are multiple dots or commas, treat them as thousands separators
+                let cleanValue = value.toString().replace(/[^\d.,]/g, '');
+
+                // If there are multiple dots/commas, treat them as thousands separators
+                if ((cleanValue.match(/\./g) || []).length > 1 || (cleanValue.match(/,/g) || []).length > 1) {
+                    cleanValue = cleanValue.replace(/[.,]/g, '');
+                } else if (cleanValue.includes('.') && cleanValue.includes(',')) {
+                    // Both comma and dot - determine which is decimal separator
+                    const lastDot = cleanValue.lastIndexOf('.');
+                    const lastComma = cleanValue.lastIndexOf(',');
+                    if (lastDot > lastComma) {
+                        // Dot is decimal separator
+                        cleanValue = cleanValue.replace(/,/g, '');
+                    } else {
+                        // Comma is decimal separator
+                        cleanValue = cleanValue.replace(/\./g, '').replace(',', '.');
+                    }
+                } else if (cleanValue.includes('.')) {
+                    // Only dots - if more than 3 digits after last dot, it's thousands separator
+                    const parts = cleanValue.split('.');
+                    if (parts.length > 1 && parts[parts.length - 1].length > 2) {
+                        cleanValue = cleanValue.replace(/\./g, '');
+                    }
+                } else if (cleanValue.includes(',')) {
+                    // Only commas - if more than 3 digits after last comma, it's thousands separator
+                    const parts = cleanValue.split(',');
+                    if (parts.length > 1 && parts[parts.length - 1].length > 2) {
+                        cleanValue = cleanValue.replace(/,/g, '');
+                    }
+                }
+
+                return parseFloat(cleanValue) || 0;
+            }
+
+            const target = parseNumber(targetRaw);
+            const current = parseNumber(currentRaw);
+            const monthly = parseNumber(monthlyRaw);
+
+            console.log('Parsed values:', { target, current, monthly });
+            console.log('Original values:', { targetRaw, currentRaw, monthlyRaw });
+
+            // Validate inputs
+            if (isNaN(target) || isNaN(current) || isNaN(monthly)) {
+                alert('Please enter valid numbers for all fields.');
+                return;
+            }
+
+            // Send data to backend for calculation
+            fetch('/calculate-months-to-target', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    target_amount: target,
+                    current_savings: current,
+                    monthly_dedication: monthly
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Months to Target Calculation:', data);
+
+                        if (data.is_target_reached) {
+                            document.getElementById('monthsToTarget').value = `0 (${data.message})`;
+                        } else {
+                            document.getElementById('monthsToTarget').value = data.months_to_target;
+                        }
+
+                        // Show warning if it takes too long
+                        if (data.needs_adjustment && !data.is_target_reached) {
+                            alert('Consider reducing expenses or increasing your contribution.');
+                        }
+
+                        // Log the formula used for debugging
+                        if (data.formula_used) {
+                            console.log('Formula used:', data.formula_used);
+                        }
+                    } else {
+                        console.error('Error calculating months to target:', data.error);
+                        document.getElementById('monthsToTarget').value = 'Error in calculation';
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error:', error);
+                    document.getElementById('monthsToTarget').value = 'Network error';
+                    alert('Network error occurred while calculating months to target.');
+                });
+        });
+
+        // Handle expense categories selection
+        const saveCategoriesBtn = document.getElementById('saveCategories');
+        const selectedCategoriesDiv = document.getElementById('selectedCategories');
+
+        saveCategoriesBtn.addEventListener('click', function () {
+            const selectedCategories = [];
+            const allExpenseCheckboxes = document.querySelectorAll('.expense-category-checkbox:checked');
+
+            allExpenseCheckboxes.forEach(checkbox => {
+                selectedCategories.push({
+                    name: checkbox.nextElementSibling.textContent,
+                    value: checkbox.value // Store the value for calculation
+                });
+            });
+
+            // Update the display of selected categories
+            let html = '<div class="selected-categories mt-2">';
+            html += '<h6>Selected Categories:</h6>';
+            if (selectedCategories.length === 0) {
+                html += '<span>No categories selected.</span>';
+            } else {
+                html += selectedCategories.map(category => category.name).join(', ');
+            }
+            html += '</div>';
+            selectedCategoriesDiv.innerHTML = html;
+
+            // Close the modal
+            $('#expenseCategoriesModal').modal('hide');
+        });
+
+        // Function to calculate average monthly expense based on selected categories
+        function calculateAverageMonthlyExpense() {
+            let totalSumOfSelectedExpenses = 0;
+            let numberOfMonthsWithData = 0;
+            const selectedCategoryValues = Array.from(document.querySelectorAll('.expense-category-checkbox:checked')).map(cb => cb.value);
+
+            if (Object.keys(categorizedMonthlyExpenses).length === 0) {
+                return 0; // No expense data available
+            }
+
+            Object.keys(categorizedMonthlyExpenses).forEach(monthKey => {
+                let monthHasSelectedExpenses = false;
+                selectedCategoryValues.forEach(categoryName => {
+                    if (categorizedMonthlyExpenses[monthKey] && categorizedMonthlyExpenses[monthKey][categoryName]) {
+                        totalSumOfSelectedExpenses += categorizedMonthlyExpenses[monthKey][categoryName];
+                        monthHasSelectedExpenses = true;
+                    }
+                });
+                if (monthHasSelectedExpenses) {
+                    numberOfMonthsWithData++;
+                }
+            });
+
+            if (numberOfMonthsWithData === 0) {
+                return 0; // No data for selected categories across any month
+            }
+
+            return totalSumOfSelectedExpenses / numberOfMonthsWithData;
+        }
+
+        // Helper function to format currency
+        function formatCurrency(amount) {
+            // Ensure amount is a number
+            if (isNaN(amount)) return '0';
+
+            // Convert to number and add comma separators
+            return Number(amount).toLocaleString('en-US');
+        }
+
+        // Add comma formatting to user input fields
+        function addCommaFormatting(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('input', function (e) {
+                // Remove all non-digit characters
+                let value = this.value.replace(/[^\d]/g, '');
+                if (value) {
+                    // Format with commas
+                    this.value = Number(value).toLocaleString('en-US');
+                } else {
+                    this.value = '';
+                }
+            });
+            // On focus, remove commas for easier editing
+            input.addEventListener('focus', function (e) {
+                this.value = this.value.replace(/,/g, '');
+            });
+            // On blur, reformat with commas
+            input.addEventListener('blur', function (e) {
+                let value = this.value.replace(/[^\d]/g, '');
+                if (value) {
+                    this.value = Number(value).toLocaleString('en-US');
+                }
+            });
+        }
+        addCommaFormatting('currentSavings');
+        addCommaFormatting('monthlyCapacity');
+    });
+</script>
+
+<style>
+#finalizeGoal .form-control {
+    border-radius: 12px;
+    /* font-size: 1.1rem; */ /* Remove or comment out this line to use default font size */
+    min-height: 48px;
+}
+#finalizeGoal label {
+    font-size: 1rem;
+}
+#finalizeGoal {
+    background: linear-gradient(120deg, #e0f7fa 0%, #f8fcfd 100%);
+    border: none;
+}
+</style>
+{% endblock %}

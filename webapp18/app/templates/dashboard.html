@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex align-items-center mb-4">
+        <h1 class="mb-0 me-4 theme-dependent-title">Financial Dashboard&nbsp;&nbsp;</h1>
+        <div style="width: 250px;">
+            <select id="monthSelector" class="form-control form-control-lg">
+                {% for label in monthly_data.labels %}
+                <option value="{{ loop.index0 }}" {% if loop.last %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Summary Cards -->
+        <div class="col-md-3">
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-dark">Monthly Income</h5>
+                    <h3 class="card-text text-dark" id="monthlyIncome">{{ total_income }} VND</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-dark">Monthly Expenses</h5>
+                    <h3 class="card-text text-dark" id="monthlyExpense">{{ total_expense }} VND</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-dark">Monthly Savings</h5>
+                    <h3 class="card-text text-dark" id="monthlySavings">{{ total_savings }} VND</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h5 class="card-title {% if is_positive %}text-success{% else %}text-danger{% endif %}">Monthly
+                        Balance</h5>
+                    <h3 class="card-text {% if is_positive %}text-success{% else %}text-danger{% endif %}"
+                        id="monthlyBalance">{{ net_balance }} VND</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row d-flex align-items-stretch" style="height:100%;">
+        <!-- Charts -->
+        <div class="col-md-6 d-flex">
+            <div class="card flex-fill">
+                <div class="card-body">
+                    <h5 class="card-title">Monthly Financial Overview</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <div style="width: 180px;">
+                            <select id="startMonthSelector" class="form-control form-control-lg">
+                                {% for label in monthly_data.labels %}
+                                <option value="{{ loop.index0 }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <span class="mx-2">to</span>
+                        <div style="width: 180px;">
+                            <select id="endMonthSelector" class="form-control form-control-lg">
+                                {% for label in monthly_data.labels %}
+                                <option value="{{ loop.index0 }}" {% if loop.last %}selected{% endif %}>{{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="monthlyOverviewChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 d-flex">
+            <div class="card flex-fill">
+                <div class="card-body">
+                    <h5 class="card-title">Expense Categories Breakdown</h5>
+                    <canvas id="expensePieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set global chart defaults for font
+        Chart.defaults.font.family = "'Montserrat', sans-serif";
+        Chart.defaults.color = '#333';
+
+        // Format number function
+        function formatNumber(number) {
+            return new Intl.NumberFormat('en-US').format(Math.round(number));
+        }
+
+        // Get the data from the server
+        const expenseData = {{ expense_categories| tojson | safe
+    }};
+    const monthlyData = {{ monthly_data| tojson | safe }};
+
+    // Calculate total for percentage
+    const total = Object.values(expenseData).reduce((sum, value) => sum + value, 0);
+
+    // Create the pie chart
+    const pieCtx = document.getElementById('expensePieChart').getContext('2d');
+    let pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(expenseData),
+            datasets: [{
+                data: Object.values(expenseData),
+                backgroundColor: [
+                    '#1C4EA7',  // Prussian Blue
+                    '#024D60',  // Midnight Green
+                    '#2CACAD',  // Light Sea Green
+                    '#75E2E0',  // Sky Blue (Crayola)
+                    '#D9F5F0'   // Water
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        font: {
+                            family: "'Montserrat', sans-serif"
+                        }
+                    }
+                },
+                tooltip: {
+                    titleFont: {
+                        family: "'Montserrat', sans-serif"
+                    },
+                    bodyFont: {
+                        family: "'Montserrat', sans-serif"
+                    },
+                    callbacks: {
+                        label: function (context) {
+                            const value = context.raw;
+                            const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return [
+                                `${context.label}: ${value.toLocaleString('en-US', { maximumFractionDigits: 0 })} VND`,
+                                `Percentage: ${percentage}%`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Create the monthly overview chart
+    const overviewCtx = document.getElementById('monthlyOverviewChart').getContext('2d');
+    let overviewChart = new Chart(overviewCtx, {
+        type: 'bar',
+        data: {
+            labels: monthlyData.labels,
+            datasets: [
+                {
+                    label: 'Income',
+                    data: monthlyData.income,
+                    backgroundColor: '#C7D66D', // Holly color
+                    borderColor: '#C7D66D',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Expenses',
+                    data: monthlyData.expense,
+                    backgroundColor: '#003F91', // Frostbite color
+                    borderColor: '#003F91',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Savings',
+                    data: monthlyData.savings,
+                    backgroundColor: '#C3B6DE', // Mulberry color
+                    borderColor: '#C3B6DE',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Balance',
+                    data: monthlyData.balance,
+                    backgroundColor: '#FF6B6B', // Changed to a more visible coral red color
+                    borderColor: '#FF6B6B',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        callback: function (value) {
+                            if (value >= 1000000 || value <= -1000000) {
+                                return (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M VND';
+                            }
+                            return Math.round(value).toLocaleString('en-US') + ' VND';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: true,
+                        drawBorder: true,
+                        drawOnChartArea: true,
+                        drawTicks: true
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const val = context.raw;
+                            let formatted;
+                            if (val >= 1000000 || val <= -1000000) {
+                                formatted = (val / 1000000).toFixed(1).replace(/\.0$/, '') + 'M VND';
+                            } else {
+                                formatted = Math.round(val).toLocaleString('en-US') + ' VND';
+                            }
+                            return context.dataset.label + ': ' + formatted;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Handle month range selection
+    const startMonthSelector = document.getElementById('startMonthSelector');
+    const endMonthSelector = document.getElementById('endMonthSelector');
+    const monthSelector = document.getElementById('monthSelector');
+
+    function updateCharts() {
+        const start = parseInt(startMonthSelector.value);
+        const end = parseInt(endMonthSelector.value) + 1;
+        if (start >= end) return; // Invalid range
+        // Slice data for the chart
+        const labels = monthlyData.labels.slice(start, end);
+        const income = monthlyData.income.slice(start, end);
+        const expense = monthlyData.expense.slice(start, end);
+        const savings = monthlyData.savings.slice(start, end);
+        const balance = monthlyData.balance.slice(start, end);
+        // Update chart
+        overviewChart.data.labels = labels;
+        overviewChart.data.datasets[0].data = income;
+        overviewChart.data.datasets[1].data = expense;
+        overviewChart.data.datasets[2].data = savings;
+        overviewChart.data.datasets[3].data = balance;
+        overviewChart.update();
+        // Update summary values
+        document.getElementById('monthlyIncome').textContent = formatNumber(income[income.length - 1]) + ' VND';
+        document.getElementById('monthlyExpense').textContent = formatNumber(expense[expense.length - 1]) + ' VND';
+        document.getElementById('monthlySavings').textContent = formatNumber(savings[savings.length - 1]) + ' VND';
+        document.getElementById('monthlyBalance').textContent = formatNumber(balance[balance.length - 1]) + ' VND';
+        // Update balance color
+        const balanceElement = document.getElementById('monthlyBalance');
+        const balanceTitle = balanceElement.previousElementSibling;
+        if (balance[balance.length - 1] >= 0) {
+            balanceElement.classList.remove('text-danger');
+            balanceElement.classList.add('text-success');
+            balanceTitle.classList.remove('text-danger');
+            balanceTitle.classList.add('text-success');
+        } else {
+            balanceElement.classList.remove('text-success');
+            balanceElement.classList.add('text-danger');
+            balanceTitle.classList.remove('text-success');
+            balanceTitle.classList.add('text-danger');
+        }
+        // Update pie chart
+        const selectedExpenseCategories = monthlyData.expense_categories[end - 1];
+        pieChart.data.labels = Object.keys(selectedExpenseCategories);
+        pieChart.data.datasets[0].data = Object.values(selectedExpenseCategories);
+        pieChart.update();
+    }
+
+    function updateDashboardValues(monthIndex) {
+        // Update summary values
+        document.getElementById('monthlyIncome').textContent = formatNumber(monthlyData.income[monthIndex]) + ' VND';
+        document.getElementById('monthlyExpense').textContent = formatNumber(monthlyData.expense[monthIndex]) + ' VND';
+        document.getElementById('monthlySavings').textContent = formatNumber(monthlyData.savings[monthIndex]) + ' VND';
+        document.getElementById('monthlyBalance').textContent = formatNumber(monthlyData.balance[monthIndex]) + ' VND';
+
+        // Update balance color
+        const balanceElement = document.getElementById('monthlyBalance');
+        const balanceTitle = balanceElement.previousElementSibling;
+        if (monthlyData.balance[monthIndex] >= 0) {
+            balanceElement.classList.remove('text-danger');
+            balanceElement.classList.add('text-success');
+            balanceTitle.classList.remove('text-danger');
+            balanceTitle.classList.add('text-success');
+        } else {
+            balanceElement.classList.remove('text-success');
+            balanceElement.classList.add('text-danger');
+            balanceTitle.classList.remove('text-success');
+            balanceTitle.classList.add('text-danger');
+        }
+
+        // Update pie chart
+        const selectedExpenseCategories = monthlyData.expense_categories[monthIndex];
+        pieChart.data.labels = Object.keys(selectedExpenseCategories);
+        pieChart.data.datasets[0].data = Object.values(selectedExpenseCategories);
+        pieChart.update();
+    }
+
+    startMonthSelector.addEventListener('change', updateCharts);
+    endMonthSelector.addEventListener('change', updateCharts);
+    monthSelector.addEventListener('change', function () {
+        const selectedIndex = parseInt(this.value);
+        updateDashboardValues(selectedIndex);
+
+        // Also update the overview chart range to show the selected month
+        startMonthSelector.value = selectedIndex;
+        endMonthSelector.value = selectedIndex;
+        updateCharts();
+    });
+
+    // Initial load: set default to last 3 months
+    const totalMonths = monthlyData.labels.length;
+    if (totalMonths >= 3) {
+        startMonthSelector.value = totalMonths - 3;
+        endMonthSelector.value = totalMonths - 1;
+    }
+    updateCharts();
+    });
+</script>
+{% endblock %}
