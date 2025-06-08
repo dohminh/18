@@ -39,6 +39,8 @@ def create_sample_data(user_id):
         # Savings
         Cashflow(user_id=user_id, amount=2000000, kind='Savings', category='Emergency Fund', date=current_date - timedelta(days=1)),
     ]
+
+    print("hello world")
     
     # Create sample budgets for current month
     current_month = current_date.strftime('%Y-%m')
